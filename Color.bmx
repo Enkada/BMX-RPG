@@ -1,3 +1,4 @@
+' New color type that uses alpha
 Type Color
 	Field r:Int
 	Field g:Int

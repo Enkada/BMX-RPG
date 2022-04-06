@@ -21,7 +21,7 @@ Const BASE_PROJECTILE_RADIUS:Float = 0.2
 Const TYPE_ENTITY = 1
 Const TYPE_PROJECTILE = 2
 
-Global player:Entity 	' PLayer entity
+Global player:Entity 	' Player entity
 Global cam:TCamera		' Camera object
 
 Global entityList:TList = CreateList()		' List of all created entities
@@ -31,6 +31,7 @@ Global projectileList:TList = CreateList()	' List of all launched projectiles
 Type DoubleStat
 	Field actual
 	Field maximum
+	Field regen
 	
 	Method New(maximum)		
 		Self.maximum = maximum
@@ -97,7 +98,10 @@ Type Entity
 	
 	Method Shoot()
 		If Self.attackCD = 0
+			' Creating projectile
 			New Projectile(Self)
+
+			' Setting attack on cooldown
 			Self.attackCD = BASE_ATTACK_CD - attackSpeed
 		EndIf		
 	End Method

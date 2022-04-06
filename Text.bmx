@@ -5,6 +5,7 @@ Import "Color.bmx"
 Global FONT_COURIER_20:TImageFont = LoadImageFont("fonts/courbd.ttf", 20, SMOOTHFONT )
 Global FONT_COURIER_48:TImageFont = LoadImageFont("fonts/courbd.ttf", 48, SMOOTHFONT )
 
+' Creates transparent sprites with text
 Type TextSprite
 	Field sprite:TSprite
 	Field font:TImageFont
@@ -27,22 +28,28 @@ Type TextSprite
 		Local texture:TTexture = CreateTexture(w, height, 2 + 4)
 
 		BeginMax2D()
+		' Drawing background
 		SetColor 0, 0, 0
 		DrawRect 0,0,w,1000
 		
+		' Drawing text with a shadow effect
 		SetColor 141, 141, 141
 		TextRect text,1,1,w,True
 		SetColor 255, 255, 255
 		TextRect text,0,0,w,True
 		
+		' Moving drawn text from backbuffer to texture
 		texture.BackBufferToTex(0, 0, False)
 
 		Cls
 		EndMax2D()
 
+		' Applying texture to sprite
 		sprite.EntityTexture(texture)
 
 		SpriteViewMode sprite, 2
+
+		' Scaling sprite (square by default)
 		ScaleSprite sprite, w/(100.0 * scale), height/(100.0 * scale)
 	EndMethod
 End Type
@@ -55,7 +62,6 @@ Function TextRect(text:String, x:Int, y:Int, w:Int, center:Int = False)
 	Local rows:Int = 0
 
 	For Local word:String = EachIn wordList
-
 		If (TextWidth(words + " " + word) > w Or word = "\n")
 			DrawText words, x + center * w / 2, y + rows * h, center
 			words = ""
