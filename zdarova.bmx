@@ -1,3 +1,4 @@
+import bah.jansson
 Import "includes/minib3d.bmx"
 Import "Entity.bmx"
 Import "UserControl.bmx"
@@ -7,6 +8,19 @@ Global width=1280,height=720,depth=16,mode=0
 
 Graphics3D width, height, depth, mode
 ClearTextureFilters
+
+'Local spellsString:String = LoadText("spells.txt") 
+
+Local error:TJSONError
+
+For Local j:TJSONObject = EachIn TJSONArray(TJSON.Load(LoadText("spells.json"), 0, error))
+	Local spell:Spell = New Spell
+	spell.id = j.GetString("id")
+	spell.class = j.GetString("class")
+	spell.cooldown = j.GetInteger("cooldown")
+
+	spellList.addLast(spell)
+Next
 
 ' Creating and positioning camera
 cam = CreateCamera()
@@ -34,12 +48,12 @@ MoveEntity grid, 0, -2, 0
 Local playerMesh:TMesh = CreateCube()
 EntityRadius playerMesh, 1.67
 player = New Entity("Player", playerMesh)
-player.speed = 0.1
-player.attackSpeed = 30
+player.movementSpeed = 0.1
+player.speed = 30
 
 ' Creating some enemies in random locations
 For Local i = 1 To 30
-	Local cube:TMesh = CreateCube()
+	Local cube:TMesh = CreateCylinder()
 	EntityColor cube, Rand(0,255), Rand(0,255), Rand(0,255)
 	EntityAlpha cube, 0.9
 	
@@ -123,7 +137,7 @@ Function Controls()
 	If KeyHit(KEY_ENTER) Then DebugStop
 
 	' Moving player and camera
-	player.Move(KeyDown(KEY_D) * player.speed - KeyDown(KEY_A) * player.speed, 0, KeyDown(KEY_W) * player.speed - KeyDown(KEY_S) * player.speed)
+	player.Move(KeyDown(KEY_D) * player.movementSpeed - KeyDown(KEY_A) * player.movementSpeed, 0, KeyDown(KEY_W) * player.movementSpeed - KeyDown(KEY_S) * player.movementSpeed)
 	PositionEntity cam, EntityX(player.mesh), EntityY(player.mesh) + 1, EntityZ(player.mesh)
 
 	If Not isCameraLocked Then
@@ -146,7 +160,7 @@ Function Controls()
 	
 	' Player attack mechanic
 	If MouseDown(1)
-		player.Shoot()
+		player.Cast(0)
 	EndIf
 
 	If KeyHit(KEY_1)

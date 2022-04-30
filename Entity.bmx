@@ -9,9 +9,8 @@ End Function
 Global HOOK_PROJECTILE_HIT_PLAYER = AllocHookId()
 
 ' List of base entity stats
-Const BASE_SPEED:Float = 0.05
+Const BASE_MOVEMENT_SPEED:Float = 0.05
 Const BASE_ATTACK_RANGE:Float = 4
-Const BASE_ATTACK_CD:Int = 50
 Const BASE_ATTACK_DAMAGE:Int = 10
 Const BASE_HEALTH:Int = 100
 
@@ -26,6 +25,7 @@ Global cam:TCamera		' Camera object
 
 Global entityList:TList = CreateList()		' List of all created entities
 Global projectileList:TList = CreateList()	' List of all launched projectiles
+Global spellList:TList = CreateList()
 
 ' Type for stat like health, mana, stamina, exp etc.
 Type DoubleStat
@@ -49,27 +49,37 @@ Type Entity
 	Field mesh:TMesh
 	Field namePlate:TextSprite
 	
-	Field speed:Float
+	Field movementSpeed:Float
 	Field attackRange:Float
-	Field attackSpeed:Int
+	Field speed:Int
 	Field attackDamage:Int 
 	Field health:DoubleStat
 	
 	Field attackCD:Int
 
+	Field spellList:TList
+	Field cooldownList:TList
+
 	Method New(name:String, mesh:TMesh)
 		Self.name = name
 		Self.mesh = mesh
 		Self.namePlate = New TextSprite(Self.mesh, Self.name)
+
+		' Creating spell list
+		Self.spellList = CreateList()
+		Self.spellList.addLast(Spell.Find("attack"));
+
+		' Creating cooldown list
+		Self.cooldownList = CreateList()
 		
 		' Type of entity mesh
 		EntityType Self.mesh, TYPE_ENTITY
 		
 		' Entity stats
-		Self.speed = BASE_SPEED
+		Self.movementSpeed = BASE_MOVEMENT_SPEED
 		Self.attackRange = BASE_ATTACK_RANGE
 		Self.attackCD = 0
-		Self.attackSpeed = 0
+		Self.speed = 0
 		Self.attackDamage = BASE_ATTACK_DAMAGE
 		Self.health = New DoubleStat(BASE_HEALTH)
 		
@@ -78,10 +88,10 @@ Type Entity
 	End Method
 	
 	Method Update()
-		' Reducing cooldown of entity attack
-		If (Self.attackCD > 0)
-			attackCD = attackCD - 1
-		EndIf
+		' Reducing cooldown of entity spells
+		For Local cd:Cooldown = EachIn Self.cooldownList
+			If cd.Update() Then Self.cooldownList.Remove(cd)
+		Next
 
 		' Nameplate logic
 		If EntityDistance(namePlate.sprite, player.mesh) < 10
@@ -95,15 +105,18 @@ Type Entity
 			HideEntity namePlate.sprite
 		EndIf
 	End Method
-	
-	Method Shoot()
-		If Self.attackCD = 0
-			' Creating projectile
-			New Projectile(Self)
 
-			' Setting attack on cooldown
-			Self.attackCD = BASE_ATTACK_CD - attackSpeed
-		EndIf		
+	Method Cast(spell:Spell)
+		Local isOnCD = False
+		For Local cd:Cooldown = EachIn Self.cooldownList
+			If cd.spell = spell Then isOnCD = True
+		Next
+
+		If Not isOnCD Then spell.EntityCast(Self)
+	End Method
+
+	Method Cast(spellNumber)
+		Self.Cast(Spell(Self.spellList.ValueAtIndex(spellNumber)))
 	End Method
 	
 	Method SetPosition(x:Float, y:Float, z:Float)
@@ -122,7 +135,7 @@ Type Entity
 	EndMethod
 	
 	Method Move()
-		MoveEntity Self.mesh, 0, 0, Self.speed
+		MoveEntity Self.mesh, 0, 0, Self.movementSpeed
 	EndMethod
 	
 	Method Turn(x:Float, y:Float, z:Float)
@@ -137,6 +150,7 @@ Type Entity
 		For Local ent:Entity = EachIn entityList
 			If ent.mesh = mesh Then Return ent
 		Next
+		Return null
 	End Function
 End Type
 
@@ -148,7 +162,7 @@ Type Enemy Extends Entity
 	Method New(name:String, mesh:TMesh)
 		Super.New(name:String, mesh:TMesh)
 		
-		Self.attackSpeed = -50
+		Self.speed = -50
 		
 		Self.Turn(Rand(0, 360))
 		
@@ -179,7 +193,7 @@ Type Enemy Extends Entity
 			If EntityDistance(player, Self) > Self.attackRange
 				Self.Move()
 			Else
-				Self.Shoot()
+				Self.Cast(0)
 			EndIf
 			
 			' Disabling walking AI
@@ -210,10 +224,14 @@ Type Projectile
 	Field maxAge:Int
 	Field speed:Float
 	Field mesh:TMesh
+	Field spell:Spell
+	Field caster:Entity
 	
-	Method New(entity:Entity, speed:Float = 0.1)
+	Method New(entity:Entity, spell:Spell, speed:Float = 0.1)
 		Local entityMesh:TMesh = entity.mesh ' Mesh of an entity that shoots projectile 
-		Self.speed = speed
+		Self.caster = entity ' Entity that casted that projectile
+		Self.spell = spell ' Projectile spell
+		Self.speed = speed ' Projectile speed
 		
 		' Projectile mesh configuration
 		Self.mesh = CreateSphere()
@@ -231,8 +249,9 @@ Type Projectile
 		' Positioning projectile to the entity it launched
 		PositionEntity Self.mesh, EntityX(entityMesh), EntityY(entityMesh) + 1, EntityZ(entityMesh)
 		
-		Self.maxAge = entity.attackRange / Self.speed
+		Self.maxAge = entity.attackRange / Self.speed ' Projectile range
 		EntityType Self.mesh, TYPE_PROJECTILE
+
 		projectileList.AddLast(Self)
 	End Method	
 	
@@ -246,22 +265,14 @@ Type Projectile
 	End Method
 	
 	Method Update()
-		MoveEntity Self.mesh, 0, 0, Self.speed
+		MoveEntity Self.mesh, 0, 0, Self.speed ' Moving projectile forward
 		Self.age = Self.age + 1
 		
-		Local target:TEntity = EntityCollided(Self.mesh, TYPE_ENTITY)
+		Local targetEntity:TEntity = EntityCollided(Self.mesh, TYPE_ENTITY)
 		' Removing health 
-		If target <> Null
-			Local ent:Entity = Entity.Find(target)
-			ent.health.actual = ent.health.actual - 10
-
-			If target <> player.mesh Then		
-				' Update entity nameplate if it is not player		
-				ent.namePlate.SetText(ent.name + "\nHP: " + ent.health.actual + " / " + ent.health.maximum)
-			Else
-				' Runs a hook then projectile hit a player to update UI
-				RunHooks( HOOK_PROJECTILE_HIT_PLAYER, null )
-			EndIf
+		If targetEntity <> Null
+			Local target:Entity = Entity.Find(targetEntity)
+			Self.spell.Cast(caster, target)		
 
 			Free()			
 		ElseIf Self.age >= Self.maxAge
@@ -269,4 +280,58 @@ Type Projectile
 			Free()
 		EndIf
 	End Method
+End Type
+
+Type Cooldown
+	Field spell:Spell
+	Field value
+
+	Method New(spell:Spell, value)
+		Self.spell = spell
+		Self.value = value		
+	EndMethod
+
+	Method Update()		
+		Self.value = Self.value - 1
+
+		If Self.value <= 0 Then	Return True
+	EndMethod
+End Type
+
+Type Spell
+	Field id:String
+	Field image:String
+	Field class:String
+	Field cooldown:Int
+
+	Method EntityCast(entity:Entity) 
+		Select Self.class
+			Case "projectile"
+				New Projectile(entity, Self)
+		EndSelect
+
+		entity.cooldownList.addLast(New Cooldown(Self, cooldown - entity.speed))
+	End Method
+
+	Method Cast(caster:Entity, target:Entity)
+		Select id
+			Case "attack"
+				target.health.actual = target.health.actual - caster.attackDamage
+
+				If target <> player Then		
+					' Update entity nameplate if it is not player		
+					target.namePlate.SetText(target.name + "\nHP: " + target.health.actual + " / " + target.health.maximum)
+				Else
+					' Runs a hook then projectile hit a player to update UI
+					RunHooks( HOOK_PROJECTILE_HIT_PLAYER, null )
+				EndIf
+		EndSelect
+	End Method
+
+	Function Find:Spell(spellId:String)
+		For Local sp:Spell = EachIn spellList
+			If sp.id = spellId Then Return sp
+		Next
+		Return null
+	End Function
 End Type

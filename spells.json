@@ -1,0 +1,18 @@
+[    
+    {
+        "id": "attack",
+        "class": "projectile",
+        "cooldown": 100
+    },
+    {
+        "id": "fireball",
+        "class": "projectile",
+        "cooldown": 1000,
+        "manacost": 10
+    },
+    {
+        "id": "heal",
+        "class": "self",
+        "manacost": 15
+    }
+]
