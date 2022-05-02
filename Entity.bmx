@@ -107,12 +107,7 @@ Type Entity
 	End Method
 
 	Method Cast(spell:Spell)
-		Local isOnCD = False
-		For Local cd:Cooldown = EachIn Self.cooldownList
-			If cd.spell = spell Then isOnCD = True
-		Next
-
-		If Not isOnCD Then spell.EntityCast(Self)
+		If Cooldown.Find(Self.cooldownList, spell) = null Then spell.EntityCast(Self)
 	End Method
 
 	Method Cast(spellNumber)
@@ -285,10 +280,12 @@ End Type
 Type Cooldown
 	Field spell:Spell
 	Field value
+	Field initialValue
 
 	Method New(spell:Spell, value)
 		Self.spell = spell
-		Self.value = value		
+		Self.value = value
+		Self.initialValue = value	
 	EndMethod
 
 	Method Update()		
@@ -296,11 +293,18 @@ Type Cooldown
 
 		If Self.value <= 0 Then	Return True
 	EndMethod
+
+	Function Find:Cooldown(cooldownList:TList, sp:Spell)		
+		For Local cd:Cooldown = EachIn cooldownList
+			If cd.spell = sp Then Return cd
+		Next
+		Return Null
+	EndFunction
 End Type
 
 Type Spell
 	Field id:String
-	Field image:String
+	Field image:TImage
 	Field class:String
 	Field cooldown:Int
 
@@ -312,6 +316,13 @@ Type Spell
 
 		entity.cooldownList.addLast(New Cooldown(Self, cooldown - entity.speed))
 	End Method
+
+	Method GetImage:TImage()
+		If Self.image = Null Then			
+			Self.image = LoadImage( "data/image/" + id + ".png", 0 )
+		EndIf
+		Return Self.image
+	EndMethod
 
 	Method Cast(caster:Entity, target:Entity)
 		Select id
@@ -332,6 +343,6 @@ Type Spell
 		For Local sp:Spell = EachIn spellList
 			If sp.id = spellId Then Return sp
 		Next
-		Return null
+		Return Null
 	End Function
 End Type

@@ -3,13 +3,11 @@ Import "includes/minib3d.bmx"
 Import "Entity.bmx"
 Import "UserControl.bmx"
 
-Global width=1280,height=720,depth=16,mode=0
+Global WINDOW_WIDTH = 1280, WINDOW_HEIGHT=720, depth=16, mode=0
 'Local width=1920,height=1080,depth=16,mode=0
 
-Graphics3D width, height, depth, mode
+Graphics3D WINDOW_WIDTH, WINDOW_HEIGHT, depth, mode
 ClearTextureFilters
-
-'Local spellsString:String = LoadText("spells.txt") 
 
 Local error:TJSONError
 
@@ -51,6 +49,9 @@ player = New Entity("Player", playerMesh)
 player.movementSpeed = 0.1
 player.speed = 30
 
+player.spellList.addLast(Spell.Find("fireball"));
+player.spellList.addLast(Spell.Find("heal"));
+
 ' Creating some enemies in random locations
 For Local i = 1 To 30
 	Local cube:TMesh = CreateCylinder()
@@ -78,12 +79,22 @@ Collisions TYPE_PROJECTILE, TYPE_ENTITY, 1, 1
 Global player_panelHealth:Panel = New Panel(50, 50, 420, 60)
 player_panelHealth.SetBackground(New Color(30, 30, 30, 0.5))
 player_panelHealth.Show()
+
 Global player_labelHealth:Label = New Label(60, 60, "PLAYER HEALTH:")
 player_labelHealth.Show()
+
 Global player_barHealth:ProgressBar = New ProgressBar(60, 80, 400, 20, player.health.maximum)
 player_barHealth.SetColors(New Color(21, 31, 21), New Color(43, 102, 43))
 player_barHealth.SetValue(player.health.maximum)
 player_barHealth.Show()
+
+Global player_spellBar:SpellBar = New SpellBar(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 60 - 8 * 2, 60, 8)
+player_spellBar.SetBackground(New Color(30, 30, 30, 0.5))
+player_spellBar.Show()
+
+Global player_spellBook:WindowPanel = New WindowPanel(50, 140, 300, 400, "Spell Book")
+player_spellBook.SetBackground(New Color(30, 30, 30, 0.5))
+player_spellBook.Show()
 
 AddHook HOOK_PROJECTILE_HIT_PLAYER, UpdatePlayerHealth
 ' # # # # # # # # # # # # # # # #
@@ -143,11 +154,11 @@ Function Controls()
 	If Not isCameraLocked Then
 		' Calculating mouse speed to rotate camera
 		Local MXS:Float, MYS:Float
-		MXS=(((MouseX()-width/2)-MXS)/4+MXS)*.5
-		MYS=(((MouseY()-height/2)-MYS)/4+MYS)*.5
+		MXS=(((MouseX()-WINDOW_WIDTH/2)-MXS)/4+MXS)*.5
+		MYS=(((MouseY()-WINDOW_HEIGHT/2)-MYS)/4+MYS)*.5
 		
 		' Positioning mouse in the center of the screen
-		MoveMouse width/2, height/2
+		MoveMouse WINDOW_WIDTH/2, WINDOW_HEIGHT/2
 		
 		' Camera and player rotation
 		TurnEntity cam, MYS, 0, 0
@@ -165,6 +176,12 @@ Function Controls()
 
 	If KeyHit(KEY_1)
 		isCameraLocked = Not isCameraLocked
+
+		If isCameraLocked Then
+			ShowMouse()	
+		Else
+			HideMouse()	
+		EndIf
 	EndIf
 End Function
 
