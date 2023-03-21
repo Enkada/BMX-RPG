@@ -23,8 +23,8 @@ Const TYPE_PROJECTILE = 2
 Global player:Entity 	' Player entity
 Global cam:TCamera		' Camera object
 
-Global entityList:TList = CreateList()		' List of all created entities
-Global projectileList:TList = CreateList()	' List of all launched projectiles
+	' List of all created entities
+	' List of all launched projectiles
 Global spellList:TList = CreateList()
 
 ' Type for stat like health, mana, stamina, exp etc.
@@ -60,6 +60,8 @@ Type Entity
 	Field spellList:TList
 	Field cooldownList:TList
 
+	Global list:TList = CreateList()	
+
 	Method New(name:String, mesh:TMesh)
 		Self.name = name
 		Self.mesh = mesh
@@ -84,7 +86,7 @@ Type Entity
 		Self.health = New DoubleStat(BASE_HEALTH)
 		
 		' Adding entity to list
-		entityList.AddLast(Self)
+		list.AddLast(Self)
 	End Method
 	
 	Method Update()
@@ -105,6 +107,12 @@ Type Entity
 			HideEntity namePlate.sprite
 		EndIf
 	End Method
+
+	Function UpdateAll()
+		For Local entity:Entity = EachIn Self.list
+			entity.Update()
+		Next
+	End Function
 
 	Method Cast(spell:Spell)
 		If Cooldown.Find(Self.cooldownList, spell) = null Then spell.EntityCast(Self)
@@ -142,7 +150,7 @@ Type Entity
 	End Method
 	
 	Function Find:Entity(mesh:TEntity)
-		For Local ent:Entity = EachIn entityList
+		For Local ent:Entity = EachIn list
 			If ent.mesh = mesh Then Return ent
 		Next
 		Return null
@@ -210,7 +218,7 @@ Type Enemy Extends Entity
 	Method Free()
 		FreeEntity Self.mesh
 		FreeEntity Self.namePlate.sprite
-		entityList.Remove(Self)
+		list.Remove(Self)
 	End Method
 End Type
 
@@ -221,6 +229,8 @@ Type Projectile
 	Field mesh:TMesh
 	Field spell:Spell
 	Field caster:Entity
+
+	Global list:TList = CreateList()
 	
 	Method New(entity:Entity, spell:Spell, speed:Float = 0.1)
 		Local entityMesh:TMesh = entity.mesh ' Mesh of an entity that shoots projectile 
@@ -247,18 +257,19 @@ Type Projectile
 		Self.maxAge = entity.attackRange / Self.speed ' Projectile range
 		EntityType Self.mesh, TYPE_PROJECTILE
 
-		projectileList.AddLast(Self)
+		Self.list.AddLast(Self)
 	End Method	
 	
 	Method Free()
 		FreeEntity Self.mesh
-		projectileList.Remove(Self)
+		Self.list.Remove(Self)
 	End Method
 	
 	Method Delete()
 		Free()
 	End Method
 	
+	' Moves all projectiles in the directions they're facing
 	Method Update()
 		MoveEntity Self.mesh, 0, 0, Self.speed ' Moving projectile forward
 		Self.age = Self.age + 1
@@ -275,6 +286,12 @@ Type Projectile
 			Free()
 		EndIf
 	End Method
+
+	Function UpdateAll()
+		For Local proj:Projectile = EachIn Self.list
+			proj.Update()
+		Next
+	End Function
 End Type
 
 Type Cooldown

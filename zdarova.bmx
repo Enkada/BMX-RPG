@@ -2,6 +2,7 @@ import bah.jansson
 Import "includes/minib3d.bmx"
 Import "Entity.bmx"
 Import "UserControl.bmx"
+Import "UserControl_Spell.bmx"
 
 Global WINDOW_WIDTH = 1280, WINDOW_HEIGHT=720, depth=16, mode=0
 'Local width=1920,height=1080,depth=16,mode=0
@@ -91,6 +92,7 @@ player_barHealth.Show()
 Global player_spellBar:SpellBar = New SpellBar(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 60 - 8 * 2, 60, 8)
 player_spellBar.SetBackground(New Color(30, 30, 30, 0.5))
 player_spellBar.Show()
+player_spellBar.AddItem(Spell.Find("attack"));
 
 Global player_spellBook:WindowPanel = New WindowPanel(50, 140, 300, 400, "Spell Book")
 player_spellBook.SetBackground(New Color(30, 30, 30, 0.5))
@@ -103,8 +105,8 @@ AddHook HOOK_PROJECTILE_HIT_PLAYER, UpdatePlayerHealth
 While Not KeyDown(KEY_ESCAPE)		
 	Controls()
 	
-	UpdateProjectiles()
-	UpdateEntities()
+	Projectile.UpdateAll()
+	Entity.UpdateAll()
 
 	UpdateWorld
 	RenderWorld
@@ -125,21 +127,21 @@ End Function
 Function Draw2D()
 	BeginMax2D()
 
-	UpdateVisibleControl()
+	UserControl.UpdateAll()
 		
 	EndMax2D()
 EndFunction
 
 Function ShowDebugInfo()
-	renders=renders+1
-	If MilliSecs()-old_ms>=1000
-		old_ms=MilliSecs()
-		fps=renders
-		renders=0
+	renders = renders + 1
+	If MilliSecs() - old_ms >= 1000
+		old_ms = MilliSecs()
+		fps = renders
+		renders = 0
 	EndIf
 	
-	Text 0,0,"FPS: "+fps
-	Text 0,10,"X: " + EntityX(player.mesh) + " | Y: " + EntityY(player.mesh) + " | Z: " + EntityZ(player.mesh)
+	Text 0,0, "FPS: " + fps
+	Text 0,10, "X: " + EntityX(player.mesh) + " | Y: " + EntityY(player.mesh) + " | Z: " + EntityZ(player.mesh)
 End Function
 
 ' Player camera and movement controls
@@ -154,8 +156,8 @@ Function Controls()
 	If Not isCameraLocked Then
 		' Calculating mouse speed to rotate camera
 		Local MXS:Float, MYS:Float
-		MXS=(((MouseX()-WINDOW_WIDTH/2)-MXS)/4+MXS)*.5
-		MYS=(((MouseY()-WINDOW_HEIGHT/2)-MYS)/4+MYS)*.5
+		MXS = (((MouseX() - WINDOW_WIDTH / 2) - MXS)/ 4 + MXS) * .5
+		MYS = (((MouseY() - WINDOW_HEIGHT / 2) - MYS)/ 4 + MYS) * .5
 		
 		' Positioning mouse in the center of the screen
 		MoveMouse WINDOW_WIDTH/2, WINDOW_HEIGHT/2
@@ -170,9 +172,9 @@ Function Controls()
 	EndIf
 	
 	' Player attack mechanic
-	If MouseDown(1)
-		player.Cast(0)
-	EndIf
+	' If MouseDown(1)
+	' 	player.Cast(0)
+	' EndIf
 
 	If KeyHit(KEY_1)
 		isCameraLocked = Not isCameraLocked
@@ -183,24 +185,4 @@ Function Controls()
 			HideMouse()	
 		EndIf
 	EndIf
-End Function
-
-Function UpdateEntities()
-	For Local entity:Entity = EachIn entityList
-		entity.Update()
-	Next
-End Function
-
-' Draws all the visible control
-Function UpdateVisibleControl()
-	For Local control:UserControl = EachIn visibleControlList
-		control.Update()
-	Next
-End Function
-
-' Moves all projectiles in the directions they're facing
-Function UpdateProjectiles()
-	For Local proj:Projectile = EachIn projectileList
-		proj.Update()
-	Next
 End Function
