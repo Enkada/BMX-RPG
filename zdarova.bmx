@@ -27,7 +27,7 @@ CameraFogMode cam, 1
 CameraFogColor cam, 146, 195, 206
 CameraFogRange cam, 0, 100
 CameraZoom cam, .8
-PositionEntity cam, 0, 1, 0
+RotateEntity cam, 45, 0, 0
 
 Global isCameraLocked = false
 
@@ -45,6 +45,7 @@ MoveEntity grid, 0, -2, 0
 
 ' Creating player entity
 Local playerMesh:TMesh = CreateCube()
+EntityColor playerMesh, Rand(0,255), Rand(0,255), Rand(0,255)
 EntityRadius playerMesh, 1.67
 player = New Entity("Player", playerMesh)
 player.movementSpeed = 0.1
@@ -69,7 +70,7 @@ Global renders
 Global fps
 
 MoveMouse 0,0
-HideMouse
+'HideMouse
 
 Collisions TYPE_ENTITY, TYPE_ENTITY, 2, 3
 Collisions TYPE_PROJECTILE, TYPE_ENTITY, 1, 1
@@ -127,9 +128,43 @@ End Function
 Function Draw2D()
 	BeginMax2D()
 
+	
+	
+
+
+
 	UserControl.UpdateAll()
 		
 	EndMax2D()
+
+EndFunction
+
+Function RotatePlayer()
+	Local halfWidth:Float = WINDOW_WIDTH / 2
+	Local halfHeight:Float = WINDOW_HEIGHT / 2
+	Local mouseX:Float = MouseX()
+	Local mouseY:Float = MouseY()
+
+	Local tangent:Double
+	Local angle:Double
+
+	If mouseY = halfHeight Then
+		If mouseX > halfWidth Then
+			tangent = 180
+		Else
+			tangent = 360
+		EndIf
+	Else
+		tangent = Abs(halfWidth - mouseX) / Abs(halfHeight - mouseY)
+	EndIf
+
+	angle = ATan(tangent)
+
+	If mouseX < halfWidth And mouseY > halfHeight Then angle = 180 - angle
+	If mouseX > halfWidth And mouseY > halfHeight Then angle = 180 + angle
+	If mouseX > halfWidth And mouseY < halfHeight Then angle = 360 - angle
+
+	RotateEntity player.mesh, 0, angle, 0	
 EndFunction
 
 Function ShowDebugInfo()
@@ -151,30 +186,9 @@ Function Controls()
 
 	' Moving player and camera
 	player.Move(KeyDown(KEY_D) * player.movementSpeed - KeyDown(KEY_A) * player.movementSpeed, 0, KeyDown(KEY_W) * player.movementSpeed - KeyDown(KEY_S) * player.movementSpeed)
-	PositionEntity cam, EntityX(player.mesh), EntityY(player.mesh) + 1, EntityZ(player.mesh)
-
-	If Not isCameraLocked Then
-		' Calculating mouse speed to rotate camera
-		Local MXS:Float, MYS:Float
-		MXS = (((MouseX() - WINDOW_WIDTH / 2) - MXS)/ 4 + MXS) * .5
-		MYS = (((MouseY() - WINDOW_HEIGHT / 2) - MYS)/ 4 + MYS) * .5
-		
-		' Positioning mouse in the center of the screen
-		MoveMouse WINDOW_WIDTH/2, WINDOW_HEIGHT/2
-		
-		' Camera and player rotation
-		TurnEntity cam, MYS, 0, 0
-		TurnEntity camPivot, 0, -MXS, 0
-		If EntityPitch(cam) > 90 RotateEntity cam, 90, EntityYaw(camPivot), 0
-		If EntityPitch(cam) < -90 RotateEntity cam, -90, EntityYaw(camPivot), 0
-		RotateEntity cam, EntityPitch(cam), EntityYaw(camPivot),0
-		RotateEntity player.mesh, EntityPitch(player.mesh), EntityYaw(camPivot),0			
-	EndIf
+	PositionEntity cam, EntityX(player.mesh), EntityY(player.mesh) + 10, EntityZ(player.mesh) - 10
 	
-	' Player attack mechanic
-	' If MouseDown(1)
-	' 	player.Cast(0)
-	' EndIf
+	RotatePlayer();
 
 	If KeyHit(KEY_1)
 		isCameraLocked = Not isCameraLocked

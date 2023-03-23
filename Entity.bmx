@@ -47,7 +47,6 @@ End Type
 Type Entity
 	Field name:String
 	Field mesh:TMesh
-	Field namePlate:TextSprite
 	
 	Field movementSpeed:Float
 	Field attackRange:Float
@@ -65,7 +64,6 @@ Type Entity
 	Method New(name:String, mesh:TMesh)
 		Self.name = name
 		Self.mesh = mesh
-		Self.namePlate = New TextSprite(Self.mesh, Self.name)
 
 		' Creating spell list
 		Self.spellList = CreateList()
@@ -94,18 +92,6 @@ Type Entity
 		For Local cd:Cooldown = EachIn Self.cooldownList
 			If cd.Update() Then Self.cooldownList.Remove(cd)
 		Next
-
-		' Nameplate logic
-		If EntityDistance(namePlate.sprite, player.mesh) < 10
-			' Making nameplate visible if it is in range
-			ShowEntity namePlate.sprite
-
-			' Rotating nameplate to player
-			PointEntity namePlate.sprite, player.mesh
-			RotateEntity namePlate.sprite, 0, EntityYaw(namePlate.sprite) - 180, 0		
-		Else
-			HideEntity namePlate.sprite
-		EndIf
 	End Method
 
 	Function UpdateAll()
@@ -217,7 +203,6 @@ Type Enemy Extends Entity
 
 	Method Free()
 		FreeEntity Self.mesh
-		FreeEntity Self.namePlate.sprite
 		list.Remove(Self)
 	End Method
 End Type
@@ -347,8 +332,7 @@ Type Spell
 				target.health.actual = target.health.actual - caster.attackDamage
 
 				If target <> player Then		
-					' Update entity nameplate if it is not player		
-					target.namePlate.SetText(target.name + "\nHP: " + target.health.actual + " / " + target.health.maximum)
+					
 				Else
 					' Runs a hook then projectile hit a player to update UI
 					RunHooks( HOOK_PROJECTILE_HIT_PLAYER, null )
