@@ -1,0 +1,60 @@
+{
+  "start": [
+    {
+      "type": "text",
+      "text": "Nice to see you §r;)"
+    },
+    {
+      "type": "text",
+      "text": "You can check changelog if you want"
+    },
+    {
+      "type": "link",
+      "text": "Lorem ipsum",
+      "id": "lorem"
+    },
+    {
+      "type": "link",
+      "text": "Changelog",
+      "id": "changelog"
+    }
+  ],  
+  "lorem": [
+    {
+      "type": "text",
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam."
+    },
+    {
+      "type": "text",
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Non odio euismod lacinia at quis. Nunc congue nisi vitae suscipit tellus. Eu facilisis sed odio morbi quis commodo odio. Donec ultrices tincidunt arcu non sodales neque sodales ut etiam."
+    },
+    {
+      "type": "text",
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Mattis ullamcorper velit sed ullamcorper morbi tincidunt ornare massa eget. Varius sit amet mattis vulputate."
+    },
+    {
+      "type": "link",
+      "text": "Back",
+      "id": "start"
+    }
+  ],
+  "changelog": [
+    {
+      "type": "text",
+      "text": "Changelog"
+    },
+	{
+      "type": "text",
+      "text": "§g[04.04.23]§f\n* Added FlowPanel to display children controls inline\n* Updated WindowPanel control, not it has WindowBar that allows to move the window\n* Added dialogue system\n* Added scrolling with ScrollViewer"
+    },
+	{
+      "type": "text",
+      "text": "§g[08.04.23]§f\n* Added functioning spellbook and spellbar\n* Added sprites for entities\n* Added Healthbars on top of enemies"
+    },
+    {
+      "type": "link",
+      "text": "Back",
+      "id": "start"
+    }
+  ]
+}

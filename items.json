@@ -1,0 +1,42 @@
+[    
+    {
+        "id": "sara_shirt",
+		"name": "Basic Shirt",
+        "class": "equipment",
+        "subclass": "body"
+    },
+    {
+        "id": "sara_jeans",
+		"name": "Basic Jeans",
+        "class": "equipment",
+        "subclass": "legs"
+    },
+    {
+        "id": "sara_shoes",
+		"name": "Basic Sneakers",
+        "class": "equipment",
+        "subclass": "feet"
+    },
+    {
+        "id": "sara_hair",
+		"name": "Basic Shirt",
+        "class": "equipment",
+        "subclass": "head"
+    },
+    {
+        "id": "knife",
+		"name": "knife",
+        "class": "equipment",
+        "subclass": "weapon"
+    },
+    {
+        "id": "bread",
+		"name": "Bread",
+        "class": "consumable"
+    },
+    {
+        "id": "health_potion",
+		"name": "Health Potion",
+        "class": "consumable"
+    }
+]

@@ -1,18 +1,49 @@
 [    
     {
         "id": "attack",
+		"name": "Attack",
         "class": "projectile",
-        "cooldown": 100
+        "cooldown": 100,
+		"description": "Default attack"
     },
     {
         "id": "fireball",
+		"name": "Fire Ball",
         "class": "projectile",
-        "cooldown": 1000,
-        "manacost": 10
+        "cooldown": 300,
+        "manacost": 10,
+		"description": "Casts fireball that deals 50 damage"
+    },
+    {
+        "id": "icebolt",
+		"name": "Ice Bolt",
+        "class": "projectile",
+        "cooldown": 300,
+        "manacost": 10,
+		"description": "Casts ice bolt that deals 50 damage"
+    },
+    {
+        "id": "poison",
+		"name": "Poison",
+        "class": "projectile",
+        "cooldown": 300,
+        "manacost": 10,
+		"description": "Casts poison that appies a debuff on enemy that deals 10 damage every second for 5 seconds"
     },
     {
         "id": "heal",
+		"name": "Heal",
         "class": "self",
-        "manacost": 15
+        "cooldown": 600,
+        "manacost": 15,
+		"description": "Heals self for 30 health"
+    },
+    {
+        "id": "icearmor",
+		"name": "Ice Armor",
+        "class": "self",
+        "cooldown": 300,
+        "manacost": 15,
+		"description": "Applies ice armor"
     }
 ]

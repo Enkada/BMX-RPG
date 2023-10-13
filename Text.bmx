@@ -2,8 +2,12 @@ Import "includes/minib3d.bmx"
 Import "Color.bmx"
 
 ' Image fonts
+Global FONT_SANS_SERIF_20:TImageFont = LoadImageFont("fonts/micross.ttf", 20, SMOOTHFONT )
+Global FONT_SANS_SERIF_12:TImageFont = LoadImageFont("fonts/micross.ttf", 12, SMOOTHFONT )
+Global FONT_COMIC_SANS_12:TImageFont = LoadImageFont("fonts/comicbd.ttf", 12, SMOOTHFONT )
 Global FONT_COURIER_20:TImageFont = LoadImageFont("fonts/courbd.ttf", 20, SMOOTHFONT )
 Global FONT_COURIER_48:TImageFont = LoadImageFont("fonts/courbd.ttf", 48, SMOOTHFONT )
+Global FONT_DEFAULT:TImageFont = FONT_COMIC_SANS_12
 
 ' Creates transparent sprites with text
 Type TextSprite
@@ -56,14 +60,14 @@ End Type
 
 ' Draws a text within a rectangle area
 Function TextRect(text:String, x:Int, y:Int, w:Int, center:Int = False)
-	Local wordList:TList = Split(text.Replace("\n", " \n "), " ")
+	Local wordList:String[] = text.Replace("\n", " \n ").Trim().Split(" ")
 	Local words:String = ""
 	Local h = TextHeight(text)
 	Local rows:Int = 0
 
 	For Local word:String = EachIn wordList
-		If (TextWidth(words + " " + word) > w Or word = "\n")
-			DrawText words, x + center * w / 2, y + rows * h, center
+		If (FormattedTextWidth(words + " " + word) > w Or word = "\n")
+			DrawFormattedText words, x + center * w / 2, y + rows * h, center
 			words = ""
 			rows = rows + 1
 		EndIf 
@@ -75,8 +79,35 @@ Function TextRect(text:String, x:Int, y:Int, w:Int, center:Int = False)
 		EndIf		
 	Next
 
-	DrawText words, x + center * w / 2, y + rows * h, center	
+	DrawFormattedText words, x + center * w / 2, y + rows * h, center	
 
+	Return (rows + 1) * h 
+End Function
+
+' Calculates text rectangle height
+Function TextRectHeight(text:String, w:Int, font:TImageFont)
+	Local currentFont:TImageFont = GetImageFont()	' Saves current font
+	SetImageFont(font)								' Applies a font that text rectangle uses for correct size calculation
+
+	Local wordList:String[] = text.Replace("\n", " \n ").Trim().Split(" ")
+	Local words:String = ""
+	Local h = TextHeight(text)
+	Local rows:Int = 0
+
+	For Local word:String = EachIn wordList
+		If (FormattedTextWidth(words + " " + word) > w Or word = "\n")			
+			words = ""
+			rows = rows + 1
+		EndIf 
+		
+		If words = ""
+			words = word.Replace("\n", "")
+		Else
+			words = words + " " + word
+		EndIf		
+	Next
+
+	SetImageFont(currentFont)	' Sets a saved font back
 	Return (rows + 1) * h 
 End Function
 
@@ -85,17 +116,46 @@ Function DrawText(text:String, x:Int, y:Int, center:Int)
 	DrawText text, x - TextWidth(text) / 2 * center, y
 End Function
 
-' Splits string by a separator
-Function Split:TList(str:String, separator:String)
-	Local array:TList = CreateList()
+' Calulates text width of formatted text excluding color tags
+Function FormattedTextWidth(text:String)
+	Local width = TextWidth(text)
 	
-	Local prev:Int = 0;
-	For Local i:Int = 1 To Len(str)
-		If Mid(str, i, 1) = separator
-			array.AddLast(Mid(str, prev, i - prev))
-			prev = i + 1
+	For Local index = 0 To Len(text)
+		Local letter:String = Mid(text, index, 1)
+		If letter = "§" Then
+			width :- TextWidth(Mid(text, index, 2))
+			index :+ 1
+			Continue
+		EndIf	
+	Next	
+
+	Return width
+EndFunction
+
+' Draws text with an ability to add color tags
+Function DrawFormattedText(text:String, x:Int, y:Int, center:Int)
+	For Local index = 0 To Len(text)
+		Local letter:String = Mid(text, index, 1)
+		If letter = "§" Then
+			Local code:String = Mid(text, index + 1, 1)
+			Local color:Color
+			Select code
+				Case "r"
+					color = Color.Red	
+				Case "g"
+					color = Color.Green	
+				Case "b"
+					color = Color.Blue	
+				Case "f"
+					color = Color.White					
+				Default
+					color = Color.White						
+			EndSelect
+			SetColor color
+			index :+ 1
+			Continue
 		EndIf
-	Next
-	array.AddLast(Mid(str, prev, Len(str) - prev + 1))
-	Return array
+		DrawText letter, x, y
+		x :+ TextWidth(letter)		
+	Next	
 End Function

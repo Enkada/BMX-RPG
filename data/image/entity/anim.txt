@@ -1,0 +1,5 @@
+walk.png
+walk_shirt.png
+walk_jeans.png
+walk_
+idle.png
